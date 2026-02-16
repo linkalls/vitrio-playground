@@ -2,23 +2,25 @@ import './style.css'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
 
-const DEFAULT_CODE = `// Vitrio playground (CDN build from GitHub)
-// You can use Vitrio without TSX here by calling h().
+const DEFAULT_CODE = `// Vitrio playground (TSX)
+// This code is transpiled in-browser via @babel/standalone.
 
-import { render, h, v, get, set } from 'https://cdn.jsdelivr.net/gh/linkalls/Vitrio@main/dist/index.mjs'
+import { render, v, get, set } from 'https://cdn.jsdelivr.net/gh/linkalls/Vitrio@main/dist/index.mjs'
 
 const count = v(0)
 
 function Counter() {
-  return h('div', {},
-    h('h1', {}, 'Vitrio Playground'),
-    h('button', { onClick: () => set(count, (c) => c - 1) }, '-'),
-    h('span', { style: 'padding:0 8px;' }, () => String(get(count))),
-    h('button', { onClick: () => set(count, (c) => c + 1) }, '+'),
+  return (
+    <div>
+      <h1>Vitrio Playground</h1>
+      <button onClick={() => set(count, (c) => c - 1)}>-</button>
+      <span style="padding:0 8px;">{() => String(get(count))}</span>
+      <button onClick={() => set(count, (c) => c + 1)}>+</button>
+    </div>
   )
 }
 
-render(Counter(), document.getElementById('preview')!)
+render(<Counter />, document.getElementById('preview'))
 `
 
 app.innerHTML = `
@@ -58,7 +60,18 @@ function run() {
   <div id="preview"></div>
   <script type="module">
     try {
-      const blob = new Blob([${JSON.stringify(userCode)}], { type: 'text/javascript' });
+      const Babel = globalThis.Babel;
+      if (!Babel) throw new Error('Babel not loaded');
+
+      const out = Babel.transform(${JSON.stringify(userCode)}, {
+        filename: 'playground.tsx',
+        presets: [
+          ['react', { runtime: 'automatic', importSource: '@potetotown/vitrio' }],
+          ['typescript', { isTSX: true, allExtensions: true }],
+        ],
+      }).code;
+
+      const blob = new Blob([out], { type: 'text/javascript' });
       const url = URL.createObjectURL(blob);
       await import(url);
       URL.revokeObjectURL(url);
