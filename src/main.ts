@@ -132,6 +132,9 @@ function getEditorText() {
   return view.state.doc.toString()
 }
 
+// debug/test hook
+;(window as any).__getEditorText = getEditorText
+
 view = new EditorView({
   parent: editorHost,
   state: EditorState.create({
