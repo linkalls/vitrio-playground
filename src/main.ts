@@ -94,6 +94,8 @@ app.innerHTML = `
     <div class="pane">
       <div class="toolbar">Preview</div>
       <iframe id="frame" sandbox="allow-scripts allow-same-origin"></iframe>
+      <div class="toolbar">Console</div>
+      <pre id="console"></pre>
     </div>
   </div>
 `
@@ -102,6 +104,7 @@ const runEl = document.querySelector<HTMLButtonElement>('#run')!
 const exEl = document.querySelector<HTMLSelectElement>('#example')!
 const editorHost = document.querySelector<HTMLDivElement>('#editor')!
 const frame = document.querySelector<HTMLIFrameElement>('#frame')!
+const consoleEl = document.querySelector<HTMLPreElement>('#console')!
 
 for (const key of Object.keys(EXAMPLES)) {
   const opt = document.createElement('option')
@@ -118,6 +121,12 @@ function setEditorText(text: string) {
     changes: { from: 0, to: view.state.doc.length, insert: text },
   })
 }
+
+window.addEventListener('message', (ev) => {
+  if (!ev.data || typeof ev.data !== 'object') return
+  if (ev.data.type === 'log') appendConsole(ev.data.msg)
+  if (ev.data.type === 'error') appendConsole('[ERR] ' + ev.data.msg)
+})
 
 function getEditorText() {
   return view.state.doc.toString()
@@ -141,7 +150,19 @@ exEl.addEventListener('change', () => {
   setEditorText(EXAMPLES[exEl.value] ?? DEFAULT_CODE)
 })
 
+let lastSrcdoc = ''
+
+function appendConsole(line: string) {
+  consoleEl.textContent += line + '\n'
+  consoleEl.scrollTop = consoleEl.scrollHeight
+}
+
+function clearConsole() {
+  consoleEl.textContent = ''
+}
+
 function run() {
+  clearConsole()
   const userCode = getEditorText()
 
   const html = `<!doctype html>
@@ -170,6 +191,11 @@ function run() {
 
   <script type="module-shim">
     try {
+      const send = (type, msg) => {
+        parent.postMessage({ type, msg }, '*')
+      }
+      console.log = (...a) => send('log', a.map(String).join(' '))
+      console.error = (...a) => send('error', a.map(String).join(' '))
       const Babel = globalThis.Babel;
       if (!Babel) throw new Error('Babel not loaded');
 
@@ -194,6 +220,7 @@ function run() {
 
       URL.revokeObjectURL(url);
     } catch (e) {
+      parent.postMessage({ type: 'error', msg: String(e?.stack || e) }, '*')
       const pre = document.createElement('pre');
       pre.style.whiteSpace = 'pre-wrap';
       pre.style.color = '#b00020';
@@ -204,8 +231,22 @@ function run() {
 </body>
 </html>`
 
-  frame.srcdoc = html
+  if (html !== lastSrcdoc) {
+    lastSrcdoc = html
+    frame.srcdoc = html
+  }
 }
+
+// Hot-ish reload: rerun on edit debounce
+let t: any = null
+view.dispatch = new Proxy(view.dispatch.bind(view), {
+  apply(target, thisArg, args) {
+    const r = Reflect.apply(target, thisArg, args)
+    if (t) clearTimeout(t)
+    t = setTimeout(() => run(), 400)
+    return r
+  },
+})
 
 runEl.addEventListener('click', run)
 run()
