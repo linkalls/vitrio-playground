@@ -89,7 +89,7 @@ function run() {
       const url = URL.createObjectURL(blob);
 
       // Use module-shim dynamic import when available
-      const mod = (globalThis as any).importShim;
+      const mod = (globalThis).importShim;
       if (typeof mod === 'function') {
         await mod(url);
       } else {
