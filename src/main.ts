@@ -31,7 +31,7 @@ render(<Counter />, document.getElementById('preview'))
   "Router (TSX)": `// Router (TSX)
 import { render, Router, Routes, Route, A, Suspense } from '@potetotown/vitrio'
 
-const basename = window.location.pathname.replace(/\/$/, '')
+const basename = window.location.pathname.replace(/\\/$/, '')
 
 function App() {
   return (
