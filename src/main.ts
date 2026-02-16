@@ -58,6 +58,8 @@ function run() {
 </head>
 <body>
   <div id="preview"></div>
+
+  <script src="https://unpkg.com/@babel/standalone@7.26.0/babel.min.js"></script>
   <script type="module">
     try {
       const Babel = globalThis.Babel;
