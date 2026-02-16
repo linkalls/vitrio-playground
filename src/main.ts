@@ -203,7 +203,15 @@ function run() {
       const Babel = globalThis.Babel;
       if (!Babel) throw new Error('Babel not loaded');
 
-      const out = Babel.transform(${JSON.stringify(userCode)}, {
+      const BASE = 'https://cdn.jsdelivr.net/gh/linkalls/Vitrio@main/dist'
+      const map = (s) => s
+        .replaceAll('@potetotown/vitrio/jsx-runtime', BASE + '/jsx-runtime.mjs')
+        .replaceAll('@potetotown/vitrio/jsx-dev-runtime', BASE + '/jsx-dev-runtime.mjs')
+        .replaceAll('@potetotown/vitrio', BASE + '/index.mjs')
+
+      const input = map(${JSON.stringify(userCode)})
+
+      let out = Babel.transform(input, {
         filename: 'playground.tsx',
         sourceType: 'module',
         presets: [
@@ -212,6 +220,8 @@ function run() {
           ['react', { runtime: 'automatic', importSource: '@potetotown/vitrio' }],
         ],
       }).code;
+
+      out = map(out)
 
       const blob = new Blob([out], { type: 'text/javascript' });
       const url = URL.createObjectURL(blob);
