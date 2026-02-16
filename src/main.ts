@@ -1,11 +1,16 @@
 import './style.css'
 
+import { EditorView, keymap } from '@codemirror/view'
+import { EditorState } from '@codemirror/state'
+import { javascript } from '@codemirror/lang-javascript'
+import { oneDark } from '@codemirror/theme-one-dark'
+import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
+
 const app = document.querySelector<HTMLDivElement>('#app')!
 
-const DEFAULT_CODE = `// Vitrio playground (TSX)
-// This code is transpiled in-browser via @babel/standalone.
-
-import { render, v, get, set } from 'https://cdn.jsdelivr.net/gh/linkalls/Vitrio@main/dist/index.mjs'
+const EXAMPLES: Record<string, string> = {
+  "Counter (TSX)": `// Counter (TSX)
+import { render, v, get, set } from '@potetotown/vitrio'
 
 const count = v(0)
 
@@ -21,16 +26,68 @@ function Counter() {
 }
 
 render(<Counter />, document.getElementById('preview'))
-`
+`,
+
+  "Router (TSX)": `// Router (TSX)
+import { render, Router, Routes, Route, A, Suspense } from '@potetotown/vitrio'
+
+function App() {
+  return (
+    <Router>
+      <Suspense fallback={<div>loading...</div>}>
+        <Routes>
+          <Route path="/">{() => <div>Home <A href="/user/42">go</A></div>}</Route>
+          <Route path="/user/:id">{(_, ctx) => <div>User {ctx.params.id} <A href="/">back</A></div>}</Route>
+          <Route path="*">{() => <div>404</div>}</Route>
+        </Routes>
+      </Suspense>
+    </Router>
+  )
+}
+
+render(<App />, document.getElementById('preview'))
+`,
+
+  "Form (TSX)": `// Form (TSX)
+import { render, Form, v, get, set } from '@potetotown/vitrio'
+
+const state = v({ name: '', agree: false })
+
+function App() {
+  return (
+    <div>
+      <Form
+        action={{
+          run: async (input) => { set(state, { name: input.name ?? '', agree: !!input.agree }); },
+          pending: () => false,
+          error: () => undefined,
+          data: () => undefined,
+        }}
+      >
+        <input name="name" placeholder="name" />
+        <label><input type="checkbox" name="agree" value="true" /> agree</label>
+        <button type="submit">save</button>
+      </Form>
+      <pre>{() => JSON.stringify(get(state))}</pre>
+    </div>
+  )
+}
+
+render(<App />, document.getElementById('preview'))
+`,
+}
+
+const DEFAULT_CODE = EXAMPLES["Counter (TSX)"]
 
 app.innerHTML = `
   <div class="layout">
     <div class="pane">
       <div class="toolbar">
         <button id="run">Run</button>
+        <select id="example"></select>
         <a class="hint" href="https://github.com/linkalls/Vitrio" target="_blank" rel="noreferrer">Vitrio repo</a>
       </div>
-      <textarea id="code" spellcheck="false"></textarea>
+      <div id="editor"></div>
     </div>
     <div class="pane">
       <div class="toolbar">Preview</div>
@@ -39,14 +96,51 @@ app.innerHTML = `
   </div>
 `
 
-const codeEl = document.querySelector<HTMLTextAreaElement>('#code')!
 const runEl = document.querySelector<HTMLButtonElement>('#run')!
+const exEl = document.querySelector<HTMLSelectElement>('#example')!
+const editorHost = document.querySelector<HTMLDivElement>('#editor')!
 const frame = document.querySelector<HTMLIFrameElement>('#frame')!
 
-codeEl.value = DEFAULT_CODE
+for (const key of Object.keys(EXAMPLES)) {
+  const opt = document.createElement('option')
+  opt.value = key
+  opt.textContent = key
+  exEl.appendChild(opt)
+}
+exEl.value = 'Counter (TSX)'
+
+let view: EditorView;
+
+function setEditorText(text: string) {
+  view.dispatch({
+    changes: { from: 0, to: view.state.doc.length, insert: text },
+  })
+}
+
+function getEditorText() {
+  return view.state.doc.toString()
+}
+
+view = new EditorView({
+  parent: editorHost,
+  state: EditorState.create({
+    doc: DEFAULT_CODE,
+    extensions: [
+      oneDark,
+      history(),
+      keymap.of([...defaultKeymap, ...historyKeymap]),
+      javascript({ typescript: true, jsx: true }),
+      EditorView.lineWrapping,
+    ],
+  }),
+})
+
+exEl.addEventListener('change', () => {
+  setEditorText(EXAMPLES[exEl.value] ?? DEFAULT_CODE)
+})
 
 function run() {
-  const userCode = codeEl.value
+  const userCode = getEditorText()
 
   const html = `<!doctype html>
 <html>

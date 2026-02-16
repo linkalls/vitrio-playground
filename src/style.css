@@ -3,7 +3,7 @@ body{margin:0}
 .layout{display:grid;grid-template-columns:1fr 1fr; height:100vh}
 .pane{display:flex;flex-direction:column; min-width:0}
 .toolbar{padding:8px 10px;border-bottom:1px solid rgba(127,127,127,.3);display:flex;gap:12px;align-items:center}
-textarea{flex:1;border:0;outline:none;padding:12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;font-size:13px;resize:none}
+#editor{flex:1; min-height:0}
 iframe{flex:1;border:0;background:white}
-button{padding:6px 10px}
+button,select{padding:6px 10px}
 .hint{opacity:.8;text-decoration:none}
