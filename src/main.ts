@@ -201,9 +201,11 @@ function run() {
 
       const out = Babel.transform(${JSON.stringify(userCode)}, {
         filename: 'playground.tsx',
+        sourceType: 'module',
         presets: [
-          ['react', { runtime: 'automatic', importSource: '@potetotown/vitrio' }],
+          // Order matters: strip TS first, then run JSX transform.
           ['typescript', { isTSX: true, allExtensions: true }],
+          ['react', { runtime: 'automatic', importSource: '@potetotown/vitrio' }],
         ],
       }).code;
 
