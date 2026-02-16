@@ -203,7 +203,7 @@ function run() {
       const Babel = globalThis.Babel;
       if (!Babel) throw new Error('Babel not loaded');
 
-      const BASE = 'https://cdn.jsdelivr.net/gh/linkalls/Vitrio@main/dist'
+      const BASE = 'https://cdn.jsdelivr.net/gh/linkalls/Vitrio@01c9717156063b4008619893b2c50dd546775911/dist'
       const map = (s) => s
         .replaceAll('@potetotown/vitrio/jsx-runtime', BASE + '/jsx-runtime.mjs')
         .replaceAll('@potetotown/vitrio/jsx-dev-runtime', BASE + '/jsx-dev-runtime.mjs')
