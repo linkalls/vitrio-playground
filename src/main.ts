@@ -12,9 +12,9 @@ const count = v(0)
 function Counter() {
   return h('div', {},
     h('h1', {}, 'Vitrio Playground'),
-    h('button', { onClick: () => set(count, (c: number) => c - 1) }, '-'),
+    h('button', { onClick: () => set(count, (c) => c - 1) }, '-'),
     h('span', { style: 'padding:0 8px;' }, () => String(get(count))),
-    h('button', { onClick: () => set(count, (c: number) => c + 1) }, '+'),
+    h('button', { onClick: () => set(count, (c) => c + 1) }, '+'),
   )
 }
 
