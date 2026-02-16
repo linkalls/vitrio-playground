@@ -190,45 +190,48 @@ function run() {
   </script>
 
   <script type="module-shim">
-    try {
-      const send = (type, msg) => {
-        parent.postMessage({ type, msg }, '*')
-      }
-      console.log = (...a) => send('log', a.map(String).join(' '))
-      console.error = (...a) => send('error', a.map(String).join(' '))
-      const Babel = globalThis.Babel;
-      if (!Babel) throw new Error('Babel not loaded');
-
-      const out = Babel.transform(${JSON.stringify(userCode)}, {
-        filename: 'playground.tsx',
-        sourceType: 'module',
-        presets: [
-          // Order matters: strip TS first, then run JSX transform.
-          ['typescript', { isTSX: true, allExtensions: true }],
-          ['react', { runtime: 'automatic', importSource: '@potetotown/vitrio' }],
-        ],
-      }).code;
-
-      const blob = new Blob([out], { type: 'text/javascript' });
-      const url = URL.createObjectURL(blob);
-
-      // Use module-shim dynamic import when available
-      const mod = (globalThis).importShim;
-      if (typeof mod === 'function') {
-        await mod(url);
-      } else {
-        await import(url);
-      }
-
-      URL.revokeObjectURL(url);
-    } catch (e) {
-      parent.postMessage({ type: 'error', msg: String(e?.stack || e) }, '*')
-      const pre = document.createElement('pre');
-      pre.style.whiteSpace = 'pre-wrap';
-      pre.style.color = '#b00020';
-      pre.textContent = String(e?.stack || e);
-      document.body.appendChild(pre);
+    const send = (type, msg) => {
+      parent.postMessage({ type, msg }, '*')
     }
+    console.log = (...a) => send('log', a.map(String).join(' '))
+    console.error = (...a) => send('error', a.map(String).join(' '))
+
+    ;(async () => {
+      try {
+        const Babel = globalThis.Babel;
+        if (!Babel) throw new Error('Babel not loaded');
+
+        const out = Babel.transform(${JSON.stringify(userCode)}, {
+          filename: 'playground.tsx',
+          sourceType: 'module',
+          presets: [
+            // Order matters: strip TS first, then run JSX transform.
+            ['typescript', { isTSX: true, allExtensions: true }],
+            ['react', { runtime: 'automatic', importSource: '@potetotown/vitrio' }],
+          ],
+        }).code;
+
+        const blob = new Blob([out], { type: 'text/javascript' });
+        const url = URL.createObjectURL(blob);
+
+        // Use module-shim dynamic import when available
+        const mod = globalThis.importShim;
+        if (typeof mod === 'function') {
+          await mod(url);
+        } else {
+          await import(url);
+        }
+
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        send('error', String(e?.stack || e))
+        const pre = document.createElement('pre');
+        pre.style.whiteSpace = 'pre-wrap';
+        pre.style.color = '#b00020';
+        pre.textContent = String(e?.stack || e);
+        document.body.appendChild(pre);
+      }
+    })()
   </script>
 </body>
 </html>`
