@@ -59,9 +59,10 @@ function run() {
 <body>
   <div id="preview"></div>
 
+  <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.26.0/babel.min.js"></script>
 
-  <script type="importmap">
+  <script type="importmap-shim">
     {
       "imports": {
         "@potetotown/vitrio": "https://cdn.jsdelivr.net/gh/linkalls/Vitrio@main/dist/index.mjs",
@@ -71,7 +72,7 @@ function run() {
     }
   </script>
 
-  <script type="module">
+  <script type="module-shim">
     try {
       const Babel = globalThis.Babel;
       if (!Babel) throw new Error('Babel not loaded');
@@ -86,7 +87,15 @@ function run() {
 
       const blob = new Blob([out], { type: 'text/javascript' });
       const url = URL.createObjectURL(blob);
-      await import(url);
+
+      // Use module-shim dynamic import when available
+      const mod = (globalThis as any).importShim;
+      if (typeof mod === 'function') {
+        await mod(url);
+      } else {
+        await import(url);
+      }
+
       URL.revokeObjectURL(url);
     } catch (e) {
       const pre = document.createElement('pre');
