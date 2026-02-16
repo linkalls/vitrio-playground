@@ -176,7 +176,7 @@ function run() {
 <body>
   <div id="preview"></div>
 
-  <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
+  <script src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
   <script src="https://unpkg.com/@babel/standalone@7.26.0/babel.min.js"></script>
 
   <script type="importmap-shim">
