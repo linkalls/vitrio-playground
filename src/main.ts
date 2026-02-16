@@ -60,6 +60,17 @@ function run() {
   <div id="preview"></div>
 
   <script src="https://unpkg.com/@babel/standalone@7.26.0/babel.min.js"></script>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "@potetotown/vitrio": "https://cdn.jsdelivr.net/gh/linkalls/Vitrio@main/dist/index.mjs",
+        "@potetotown/vitrio/jsx-runtime": "https://cdn.jsdelivr.net/gh/linkalls/Vitrio@main/dist/jsx-runtime.mjs",
+        "@potetotown/vitrio/jsx-dev-runtime": "https://cdn.jsdelivr.net/gh/linkalls/Vitrio@main/dist/jsx-dev-runtime.mjs"
+      }
+    }
+  </script>
+
   <script type="module">
     try {
       const Babel = globalThis.Babel;
